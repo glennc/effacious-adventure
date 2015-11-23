@@ -57,7 +57,7 @@ namespace ConsoleApplication
             return $"Token({TokenType}, {TokenValue})";
         }
     }
-
+    
     public class Interpreter
     {
         public string SourceText {get;set;}
@@ -111,28 +111,33 @@ namespace ConsoleApplication
                 }
                 return new Token(TokenType.INTEGER, integerValue);
             }
-
-            Token opTokenType = null;
+            
+            TokenType? opTokenType = null;
             switch(_currentChar)
             {
                 case '+':
-                    opTokenType = new Token(TokenType.PLUS, "+");
+                    opTokenType = TokenType.PLUS;
                     break;
                 case '-':
-                    opTokenType = new Token(TokenType.MINUS, "-");
+                    opTokenType = TokenType.MINUS;
                     break;
                 case '/':
-                    opTokenType = new Token(TokenType.DIVIDE, "/");
+                    opTokenType = TokenType.DIVIDE;
                     break;
                 case '*':
-                    opTokenType = new Token(TokenType.MULTIPLY, "*");
+                    opTokenType = TokenType.MULTIPLY;
                     break;
-                default:
-                    throw new ArgumentException($"Unable to parse {_currentChar.Value}");
             }
 
-            AdvanceChar();
-            return opTokenType;
+            if(opTokenType.HasValue)
+            {
+                //TODO: I dislike having to do this, once the code has diverged from the Python
+                //source enough to make similarity a non-goal it should be changed.
+                var tokenChar = _currentChar;
+                AdvanceChar();
+                return new Token(opTokenType.Value, tokenChar.ToString());
+            }
+            throw new ArgumentException($"Unable to parse {_currentChar.Value}");
         }
 
         public bool Eat(TokenType tokenType)

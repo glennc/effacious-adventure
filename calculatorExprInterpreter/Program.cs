@@ -15,7 +15,7 @@ namespace ConsoleApplication
                     Console.WriteLine($"Parsing {text}");
                     var lexer = new Lexer(text);
                     var interpreter = new Interpreter(lexer);
-                    var result = interpreter.Execute();
+                    var result = interpreter.Expr();
                     Console.WriteLine($"Result: {result.ToString()}");
                 }
                 catch(Exception ex)
@@ -34,7 +34,9 @@ namespace ConsoleApplication
         MINUS = 2,
         EOF = 4,
         DIVIDE = 8,
-        MULTIPLY = 16
+        MULTIPLY = 16,
+        LPARAM = 32,
+        RPARAM = 64
     }
 
     public class Token
@@ -110,27 +112,33 @@ namespace ConsoleApplication
                 return new Token(TokenType.INTEGER, integerValue);
             }
 
-            Token opTokenType = null;
+            Token knownToken = null;
             switch(_currentChar)
             {
                 case '+':
-                    opTokenType = new Token(TokenType.PLUS, "+");
+                    knownToken = new Token(TokenType.PLUS, "+");
                     break;
                 case '-':
-                    opTokenType = new Token(TokenType.MINUS, "-");
+                    knownToken = new Token(TokenType.MINUS, "-");
                     break;
                 case '/':
-                    opTokenType = new Token(TokenType.DIVIDE, "/");
+                    knownToken = new Token(TokenType.DIVIDE, "/");
                     break;
                 case '*':
-                    opTokenType = new Token(TokenType.MULTIPLY, "*");
+                    knownToken = new Token(TokenType.MULTIPLY, "*");
+                    break;
+                case '(':
+                    knownToken = new Token(TokenType.LPARAM, "(");
+                    break;
+                case ')':
+                    knownToken = new Token(TokenType.RPARAM, ")");
                     break;
                 default:
                     throw new ArgumentException($"Unable to parse {_currentChar.Value}");
             }
 
             AdvanceChar();
-            return opTokenType;
+            return knownToken;
         }
 
     }
@@ -143,6 +151,7 @@ namespace ConsoleApplication
         public Interpreter(Lexer lexer)
         {
             Lexer = lexer;
+            CurrentToken = Lexer.GetNextToken();
         }
 
         public bool Eat(TokenType tokenType)
@@ -158,27 +167,27 @@ namespace ConsoleApplication
         public int Factor()
         {
             var token = CurrentToken;
+            if(token.TokenType == TokenType.LPARAM)
+            {
+                Eat(TokenType.LPARAM);
+                var result = Expr();
+                Eat(TokenType.RPARAM);
+                return int.Parse(result);
+            }
             Eat(TokenType.INTEGER);
             return int.Parse(token.TokenValue);
         }
 
-        public string Execute()
+        public int Term()
         {
-            var opTokens = TokenType.PLUS | TokenType.DIVIDE | TokenType.MINUS | TokenType.MULTIPLY;
-            this.CurrentToken = Lexer.GetNextToken();
-            int result = Factor();
-            while(opTokens.HasFlag(CurrentToken.TokenType))
+            var termTokenTypes = TokenType.DIVIDE | TokenType.MULTIPLY;
+            
+            var result = Factor();
+            while(termTokenTypes.HasFlag(CurrentToken.TokenType))
             {
-                switch(CurrentToken.TokenType)
+                var token = CurrentToken;
+                switch(token.TokenType)
                 {
-                    case TokenType.PLUS:
-                        Eat(TokenType.PLUS);
-                        result += Factor();
-                        break;
-                    case TokenType.MINUS:
-                        Eat(TokenType.MINUS);
-                        result -= Factor();
-                        break;
                     case TokenType.DIVIDE:
                         Eat(TokenType.DIVIDE);
                         result /= Factor();
@@ -186,6 +195,28 @@ namespace ConsoleApplication
                     case TokenType.MULTIPLY:
                         Eat(TokenType.MULTIPLY);
                         result *= Factor();
+                        break;
+                }
+            }
+            return result;
+        }
+
+        public string Expr()
+        {
+            var opTokens = TokenType.PLUS | TokenType.MINUS;
+
+            int result = Term();
+            while(opTokens.HasFlag(CurrentToken.TokenType))
+            {
+                switch(CurrentToken.TokenType)
+                {
+                    case TokenType.PLUS:
+                        Eat(TokenType.PLUS);
+                        result += Term();
+                        break;
+                    case TokenType.MINUS:
+                        Eat(TokenType.MINUS);
+                        result -= Term();
                         break;
                     default:
                         throw new Exception($"Unknown operation: {CurrentToken.TokenType.ToString()}");

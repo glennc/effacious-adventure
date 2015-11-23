@@ -13,7 +13,8 @@ namespace ConsoleApplication
                     Console.WriteLine("calculator. Enter calculations:");
                     var text = Console.ReadLine();
                     Console.WriteLine($"Parsing {text}");
-                    var interpreter = new Interpreter(text);
+                    var lexer = new Lexer(text);
+                    var interpreter = new Interpreter(lexer);
                     var result = interpreter.Execute();
                     Console.WriteLine($"Result: {result.ToString()}");
                 }
@@ -57,22 +58,20 @@ namespace ConsoleApplication
             return $"Token({TokenType}, {TokenValue})";
         }
     }
-
-    public class Interpreter
+    
+    public class Lexer
     {
         public string SourceText {get;set;}
         private int _pos {get;set;}
         private char? _currentChar = null;
-        public Token CurrentToken {get; set; }
         
-        
-        public Interpreter(string sourceText)
+        public Lexer(string sourceText)
         {
             this.SourceText = sourceText;
             _pos = -1;
             AdvanceChar();
         }
-        
+
         public void AdvanceChar()
         {
             _pos++;
@@ -102,7 +101,6 @@ namespace ConsoleApplication
 
             if(Char.IsDigit(_currentChar.Value))
             {
-                //Some refactoring for recursion here is probably better...
                 string integerValue = string.Empty;
                 while(_currentChar.HasValue && Char.IsNumber(_currentChar.Value))
                 {
@@ -135,17 +133,29 @@ namespace ConsoleApplication
             return opTokenType;
         }
 
+    }
+
+    public class Interpreter
+    {
+        public Token CurrentToken {get; set; }
+        public Lexer Lexer {get; set;}
+
+        public Interpreter(Lexer lexer)
+        {
+            Lexer = lexer;
+        }
+
         public bool Eat(TokenType tokenType)
         {
             if(tokenType.HasFlag(CurrentToken.TokenType))
             {
-                this.CurrentToken = this.GetNextToken();
+                this.CurrentToken = Lexer.GetNextToken();
                 return true;
             }
             return false;
         }
         
-        public int UnwrapTerm()
+        public int Factor()
         {
             var token = CurrentToken;
             Eat(TokenType.INTEGER);
@@ -155,27 +165,27 @@ namespace ConsoleApplication
         public string Execute()
         {
             var opTokens = TokenType.PLUS | TokenType.DIVIDE | TokenType.MINUS | TokenType.MULTIPLY;
-            this.CurrentToken = this.GetNextToken();
-            int result = UnwrapTerm();
+            this.CurrentToken = Lexer.GetNextToken();
+            int result = Factor();
             while(opTokens.HasFlag(CurrentToken.TokenType))
             {
-                 switch(CurrentToken.TokenType)
+                switch(CurrentToken.TokenType)
                 {
                     case TokenType.PLUS:
                         Eat(TokenType.PLUS);
-                        result += UnwrapTerm();
+                        result += Factor();
                         break;
                     case TokenType.MINUS:
                         Eat(TokenType.MINUS);
-                        result -= UnwrapTerm();
+                        result -= Factor();
                         break;
                     case TokenType.DIVIDE:
                         Eat(TokenType.DIVIDE);
-                        result /= UnwrapTerm();
+                        result /= Factor();
                         break;
                     case TokenType.MULTIPLY:
                         Eat(TokenType.MULTIPLY);
-                        result *= UnwrapTerm();
+                        result *= Factor();
                         break;
                     default:
                         throw new Exception($"Unknown operation: {CurrentToken.TokenType.ToString()}");

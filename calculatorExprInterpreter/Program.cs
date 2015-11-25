@@ -10,6 +10,11 @@ namespace ConsoleApplication
             {
                 try
                 {
+                    Console.Write("prompt>");
+                    var input = Console.ReadLine();
+                    Console.WriteLine("echo " + input);
+                    Console.ReadLine();
+                    
                     Console.WriteLine("calculator. Enter calculations:");
                     var text = Console.ReadLine();
                     Console.WriteLine($"Parsing {text}");

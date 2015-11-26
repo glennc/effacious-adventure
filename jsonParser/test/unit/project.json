@@ -1,0 +1,20 @@
+﻿{
+    "version": "1.0.0-*",
+    "compilationOptions": {
+        "emitEntryPoint": false
+    },
+    "dependencies": {
+        "JsonConfigParser" : "",
+        "Microsoft.NETCore.Runtime": "1.0.1-beta-*",
+        "System.IO": "4.0.10-beta-*",
+        "System.Console": "4.0.0-beta-*",
+        "System.Runtime": "4.0.21-beta-*",
+        "System.IO.FileSystem": "4.0.1-beta-*",
+        "xunit" : "2.1.0",
+        "xunit.runner.console" : "2.1.0"
+    },
+
+    "frameworks": {
+        "dnxcore50": { }
+    }
+}

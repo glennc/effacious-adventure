@@ -17,7 +17,6 @@ namespace JsonConfigParser
         //to store the digits before we convert them to the correct value and add them to the 
         //string.
         private char[] _unicodeStringBuffer = new char[4];
-
         public JsonLexer(StreamReader source)
         {
             _sourceStream = source;
@@ -29,6 +28,16 @@ namespace JsonConfigParser
             //TODO: Once this is actually parsing full files it might be interesting to buffer line-by-line and
             //perhaps read in the next line asyncronously. Setup some timing tests to verify changes before...
             _lookaheadChar = _sourceStream.Read();
+            // _pos++;
+
+            // if(_pos >= _lineBuffer.Length)
+            // {
+            //     _lookaheadChar = -1;
+            // }
+            // else
+            // {
+            //     _lookaheadChar = _lineBuffer[_pos];
+            // }
         }
 
         //Initially I had a structure like this, I tried a couple of different ones. Having this and looping through it

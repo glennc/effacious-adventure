@@ -10,7 +10,11 @@
         "System.IO": "4.0.10-beta-*",
         "System.Console": "4.0.0-beta-*",
         "System.Runtime": "4.0.21-beta-*",
-        "System.Linq": "4.0.1-beta-*"
+        "System.Linq": "4.0.1-beta-*",
+        "Microsoft.Extensions.JsonParser.Sources": {
+            "type": "build",
+            "version": "1.0.0-*"
+        }
     },
 
     "frameworks": {
